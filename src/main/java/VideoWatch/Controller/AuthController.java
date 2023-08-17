@@ -36,18 +36,7 @@ import java.util.Collections;
             // Create a new user
             customerServiceInterface.createCustomer(registrationRequest);
             //when a user registers at the API it authomatically sends a welcoming email
-            Email email= new Email();
-            email.setSubject("Welcome to Blockbuster");
-            email.setBody("Thank you for registering at Blockbuster");
-            email.setSender("paisagensagua@gmail.com");
-            //So there is a method or attribute that expects a list, but I only want to pass a single item
-            // i can use the collections.singleton to create a list with one item
-            email.setReceivers(Collections.singletonList(registrationRequest.getEmail()));
-            try {
-                emailServiceInterface.sendEmail(email);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            emailServiceInterface.sendWelcomingEmail(registrationRequest);
 
             // Return a success response
             return ResponseEntity.ok("Registration successful");
