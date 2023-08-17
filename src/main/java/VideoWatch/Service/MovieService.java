@@ -28,13 +28,11 @@ public class MovieService implements MovieServiceInterface{
         this.modelMapper = modelMapper;
     }
 
+    @Override
     public MovieDto createMovie(MovieDto movieDto) {
-        //if the movie is in the DB then the method will return an empty container meaning no saved movie
-        Optional <Movie> existingMovie= movieRepository.findMovieByTitle(movieDto.getTitle());
-
-        if (existingMovie.isPresent()) {
-            throw new IllegalArgumentException("Movie already is present");
-        }
+        //if the movie is in the DB then the method will throw an exception
+        movieRepository.findMovieByTitle(movieDto.getTitle())
+                .ifPresent(movie -> new IllegalArgumentException("Movie already exists"));
 
         //convert the customerDto instance to a POJO instance and save the latter to the customer variable
         Movie movie= modelMapper.map(movieDto, Movie.class);
@@ -47,41 +45,38 @@ public class MovieService implements MovieServiceInterface{
         return  movieDto1;
     }
 
+    @Override
     public MovieDto findMovieById(int id) {
-        Optional <Movie> movie= movieRepository.findById(id);
-
-        if (movie.isEmpty()){
-            return null;
-        }
-        MovieDto movieDto= modelMapper.map(movie,MovieDto.class);
-        return movieDto;
+        return movieRepository.findById(id)
+                .map(movie -> modelMapper.map(movie, MovieDto.class))
+                .orElse(null);
     }
 
+    @Override
     public List<MovieDto> findAllMovies(){
-        List <Movie>movies = movieRepository.findAll();
-        List<MovieDto> moviesDto=new LinkedList<>();
 
-
-        for (Movie movie:movies){
-            MovieDto movieDto= modelMapper.map(movie,MovieDto.class);
-            moviesDto.add(movieDto);
-        }
-        return moviesDto;
+        return movieRepository.findAll()
+                .stream()
+                .map(movie -> modelMapper.map(movie,MovieDto.class))
+                .collect(Collectors.toList());
     }
 
+    @Override
     public void updateMovie(int id, MovieDto movieDto) {
-           Optional <Movie> optionalMovie= movieRepository.findById(id);
+        Optional<Movie> optionalMovie = movieRepository.findById(id);
 
-           if (optionalMovie.isEmpty()){
-               throw new NoSuchElementException("No movie with that Id found");
-           }
-            Movie movieToUpdate= optionalMovie.get();
-           //convert the movieDto to movie and then repo persist it
-            Movie movie= modelMapper.map(movieDto,Movie.class);
-            movie.setId(movieToUpdate.getId());
-            movieRepository.save(movie);
+        if (optionalMovie.isEmpty()) {
+            throw new NoSuchElementException("No movie with that Id found");
+        }
+        Movie movieToUpdate = optionalMovie.get();
+        //convert the movieDto to movie and then repo persist it
+        Movie movie = modelMapper.map(movieDto, Movie.class);
+        movie.setId(movieToUpdate.getId());
+        movieRepository.save(movie);
+
     }
 
+    @Override
     public void deleteMovieById(int id) {
         Optional<Movie> existingMovie= movieRepository.findById(id);
         if (existingMovie.isEmpty()){
@@ -92,36 +87,26 @@ public class MovieService implements MovieServiceInterface{
     }
 
     @Override
-    public MovieDto findMovieByTitle(String title) {
-        Optional <Movie> movie= movieRepository.findMovieByTitle(title);
-        if (movie.isEmpty()) {
-            return null;
-        }
+    public List<MovieDto> findMovieByTitle(String title) {
 
-        MovieDto movieDto= modelMapper.map(movie,MovieDto.class);
-
-        return movieDto;
+        //if no movie is found, an empty Collection is returned
+       return movieRepository.findMovieByTitle(title)
+               .stream()
+                .map(movie->modelMapper.map(movie,MovieDto.class))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<MovieDto> findMoviesByYear(int year) {
-        List <Movie> movies= movieRepository.findMoviesByReleaseYear(year);
-        if (movies.isEmpty()){
-            return Collections.emptyList();
-        }
-
-        return movies.stream()
+        return
+                movieRepository.findMoviesByReleaseYear(year).stream()
                 .map(movie -> modelMapper.map(movie,MovieDto.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<MovieDto> findMoviesByGenre(String genre) {
-        List <Movie> movies= movieRepository.findMoviesByGenre(genre);
-        if (movies.isEmpty()){
-            return Collections.emptyList();
-        }
-        return movies.stream()
+        return movieRepository.findMoviesByGenre(genre).stream()
                 .map(movie -> modelMapper.map(movie,MovieDto.class))
                 .collect(Collectors.toList());    }
 

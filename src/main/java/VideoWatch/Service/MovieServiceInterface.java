@@ -10,7 +10,7 @@ public interface MovieServiceInterface {
     MovieDto findMovieById(int id);
     void updateMovie(int id,MovieDto movieDto);
     void deleteMovieById(int id);
-    MovieDto findMovieByTitle (String title);
+    List<MovieDto> findMovieByTitle (String title);
     List<MovieDto> findMoviesByYear (int year);
     List<MovieDto> findMoviesByGenre (String genre);
     MovieDto movieBeingWatched (int customerId, int movieId);
