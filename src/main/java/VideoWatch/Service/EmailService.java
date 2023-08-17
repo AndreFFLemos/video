@@ -45,7 +45,7 @@ public class EmailService implements EmailServiceInterface{
     }
 
     public void sendWelcomingEmail(UserRegistrationRequest registrationRequest){
-        
+
         Email email= new Email();
         email.setSubject("Welcome to Blockbuster");
         email.setBody("Thank you for registering at Blockbuster");
