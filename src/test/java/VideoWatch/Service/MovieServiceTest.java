@@ -146,13 +146,13 @@ class MovieServiceTest {
 
         //check when movie is present
         when(movieRepository.findMovieByTitle("Rambo")).thenReturn(Optional.of(movie));
-        MovieDto mockedM= ms.findMovieByTitle("Rambo");
-        assertEquals("Rambo",mockedM.getTitle());
+        List<MovieDto> mockedM= ms.findMovieByTitle("Rambo");
+        assertTrue(mockedM.contains(movieDto));
 
         //check when movie is not present
         when(movieRepository.findMovieByTitle("Matrix")).thenReturn(Optional.empty());
-        MovieDto movieNotFound= ms.findMovieByTitle("Matrix");
-        assertNull(movieNotFound);
+        List<MovieDto> movieNotFound= ms.findMovieByTitle("Matrix");
+        assertTrue(movieNotFound.isEmpty());
 
         verify(movieRepository).findMovieByTitle("Rambo");
         verify(movieRepository).findMovieByTitle("Matrix");

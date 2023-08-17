@@ -20,6 +20,6 @@ public interface MovieControllerInterface {
     ResponseEntity<Void>  updateMovie(@PathVariable int id,@Valid @RequestBody MovieDto movieDto);
     ResponseEntity <Void> deleteMovie(@PathVariable int id);
     ResponseEntity <MovieDto> movieBeingWatched(@PathVariable int customerId, @PathVariable int movieId);
-    ResponseEntity<MovieDto> findMovieByTitle(@RequestParam("title") String title);
+    ResponseEntity<List<MovieDto>> findMovieByTitle(@RequestParam("title") String title);
 
 }

@@ -32,7 +32,9 @@ public class MovieService implements MovieServiceInterface{
     public MovieDto createMovie(MovieDto movieDto) {
         //if the movie is in the DB then the method will throw an exception
         movieRepository.findMovieByTitle(movieDto.getTitle())
-                .ifPresent(movie -> new IllegalArgumentException("Movie already exists"));
+                .ifPresent(movie -> {
+                    throw new IllegalArgumentException("Movie already exists");
+                });
 
         //convert the customerDto instance to a POJO instance and save the latter to the customer variable
         Movie movie= modelMapper.map(movieDto, Movie.class);

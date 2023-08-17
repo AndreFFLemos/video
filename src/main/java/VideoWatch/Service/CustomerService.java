@@ -58,7 +58,9 @@ public class CustomerService implements CustomerServiceInterface {
         }
         //if the customer is in the DB then the method will throw the exception
         cr.findByEmail(userRegistration.getEmail())
-                .ifPresent(customer->new NoSuchElementException("Customer already Exists"));
+                .ifPresent(customer->{
+                    throw new IllegalArgumentException("Customer already Exists");
+                });
 
         //convert the customerDto instance to a POJO instance and save the latter to the customer instance
         Customer customer= modelMapper.map(userRegistration, Customer.class);

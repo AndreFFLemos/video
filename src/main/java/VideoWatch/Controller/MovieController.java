@@ -34,7 +34,7 @@ public class MovieController implements MovieControllerInterface {
     }
     @Override
     @GetMapping(value = "movie/bytitle")
-    public ResponseEntity<MovieDto> findMovieByTitle(@RequestParam("title") String title) {
+    public ResponseEntity<List<MovieDto>> findMovieByTitle(@RequestParam("title") String title) {
         return ResponseEntity.ok(movieServiceInterface.findMovieByTitle(title));
     }
 

@@ -150,8 +150,7 @@ class CustomerServiceTest {
 
         //check when customer is not present
         when(cr.findByEmail("b@b")).thenReturn(Optional.empty());
-        Customer customerNotFound= cs.findCustomerByEmail("b@b");
-        assertNull(customerNotFound);
+        assertThrows(NoSuchElementException.class,()->cs.findCustomerByEmail("b@b"));
 
         verify(cr).findByEmail("a@l");
         verify(cr).findByEmail("b@b");
