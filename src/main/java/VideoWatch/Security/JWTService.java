@@ -1,9 +1,8 @@
 package VideoWatch.Security;
 
 import VideoWatch.Model.Customer;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -58,6 +57,32 @@ public class JWTService {
 
         }
         return Optional.empty();
+    }
+
+    public boolean isValid(String token) {
+        try {
+            // if it doesnt throw an exception, the token is valid.
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            // Token is expired but it was valid
+            return false;
+        } catch (SignatureException e) {
+            // Invalid signature, token has been messed with.
+            return false;
+        } catch (MalformedJwtException e) {
+            // The token is not constructed correctly.
+            return false;
+        } catch (UnsupportedJwtException e) {
+            // The token is unsupported.
+            return false;
+        } catch (IllegalArgumentException e) {
+            // The token is empty, null or not correct.
+            return false;
+        }
     }
 
     private Claims parse(String token) {

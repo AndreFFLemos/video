@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/customer")
+@RequestMapping(value = "/api")
 public class CustomerController implements CustomerControllerInterface {
 
     private CustomerServiceInterface customerServiceInterface;
@@ -29,7 +29,7 @@ public class CustomerController implements CustomerControllerInterface {
     }
 
     @Override
-    @DeleteMapping(value = "/{id}")
+    @DeleteMapping(value = "/customer/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable int id) {
 
         customerServiceInterface.deleteCustomer(id);
@@ -38,20 +38,20 @@ public class CustomerController implements CustomerControllerInterface {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/{id}")
+    @GetMapping(value = "/customer/{id}")
     @Override
     public ResponseEntity<CustomerDto> getCustomer(@PathVariable int id) {
 
         return new ResponseEntity<>(customerServiceInterface.findCustomerById(id),HttpStatus.OK);
     }
     @Override
-    @PutMapping(value = "/update/{id}")
+    @PutMapping(value = "/customer/update/{id}")
     public ResponseEntity<Void> updateCustomer(@PathVariable int id,@Valid @RequestBody CustomerDto toUpdateCustomerDto) {
         //the browser sends the updated customer data in the body of the request in JSON format.
         customerServiceInterface.updateCustomer(id,toUpdateCustomerDto);
         return ResponseEntity.noContent().build();
     }
-    @PutMapping("/updatePassword/{id}")
+    @PutMapping("/customer/updatePassword/{id}")
     public ResponseEntity<Void> updatePassword(@PathVariable Integer id, @Valid @RequestBody PasswordDto passwordDto) {
         customerServiceInterface.updatePassword(id,passwordDto);
         // the build method constructs a response entity with an empty body
@@ -59,14 +59,14 @@ public class CustomerController implements CustomerControllerInterface {
     }
 
     @Override
-    @GetMapping(value = "/byid")
+    @GetMapping(value = "/customer/byid")
     public ResponseEntity<CustomerDto> findCustomerByID(@RequestParam ("id") int id) {
 
         return ResponseEntity.ok(customerServiceInterface.findCustomerById(id));
     }
 
     @Override
-    @GetMapping(value = "/byfirstname")
+    @GetMapping(value = "/customer/byfirstname")
     public ResponseEntity<List<CustomerDto>> findCustomerByFirstName(@Valid @RequestParam("firstname") String firstName) {
 
         return new ResponseEntity<>(customerServiceInterface.findCustomerByFirstName(firstName),HttpStatus.OK);
@@ -74,13 +74,13 @@ public class CustomerController implements CustomerControllerInterface {
     }
 
     @Override
-    @GetMapping (value = "/bylastname")
+    @GetMapping (value = "/customer/bylastname")
     public ResponseEntity<List<CustomerDto>> findCustomerByLastName(@Valid @RequestParam ("lastName") String lastName) {
         return new ResponseEntity<>(customerServiceInterface.findCustomerByLastName(lastName),HttpStatus.OK);
     }
 
     @Override
-    @GetMapping(value = "/all")
+    @GetMapping(value = "/customer/all")
     public ResponseEntity<List<CustomerDto>> findAllCustomers() {
 
         return new ResponseEntity<>(customerServiceInterface.findAll(), HttpStatus.OK);
@@ -91,7 +91,7 @@ public class CustomerController implements CustomerControllerInterface {
         return customerServiceInterface.login(login.getEmail(), login.getPassword());
     }
 
-    @PostMapping(value="/email")
+    @PostMapping(value="/customer/email")
     public String sendEmail(@RequestBody Email email){
         try {
             emailService.sendEmail(email);

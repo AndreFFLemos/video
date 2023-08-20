@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.Optional;
+
 public class CustomUserDetailsService implements UserDetailsService {
 
     private ModelMapper modelMapper;
@@ -24,13 +26,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     // the method is invoked during the authentication process
     //it takes an email as input and tries to load the customer based on the email
     public UserDetails loadUserByUsername(String email){
-        Customer customer= customerService.findCustomerByEmail(email);
+        Optional<Customer> customer= customerService.findCustomerByEmail(email);
 
-        if (customer==null){
-            throw new UsernameNotFoundException("Not found");
+        if (customer.isEmpty()){
+            return null;
         }
 
-        return customer;
+        return customer.get();
     }
-
 }

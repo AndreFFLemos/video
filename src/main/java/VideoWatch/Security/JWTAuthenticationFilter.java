@@ -42,7 +42,19 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+
+        if (request.getRequestURI().equals("/api/register")){
+            filterChain.doFilter(request,response);
+            return;
+        }
+
         String token = getToken(request);
+
+        if (token==null|| !jwtService.isValid(token)){
+            filterChain.doFilter(request,response);
+            return;
+        }
+
 
         //from the token, let's get the identification
         Optional<String> userEmail = jwtService.getUserId(token);

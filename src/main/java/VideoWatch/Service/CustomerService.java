@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -47,6 +48,7 @@ public class CustomerService implements CustomerServiceInterface {
         this.authenticationManager = authenticationManager;
     }
 
+    @Transactional(propagation=Propagation.REQUIRES_NEW)
     @Override
     public CustomerDto createCustomer(UserRegistrationRequest userRegistration) {
         if (userRegistration == null) {
@@ -69,8 +71,7 @@ public class CustomerService implements CustomerServiceInterface {
         String thePassword=passwordEncoder.encode(customer.getPassword());
         customer.setPassword(thePassword);
         //tell the repository to persist the customer instance and save that instance on the customer variable
-        customer= cr.save(customer);
-
+        customer= cr.saveAndFlush(customer);
         //convert that persisted instance back in to a DTO object
         CustomerDto customerDto1= modelMapper.map(customer,CustomerDto.class);
 
@@ -154,10 +155,14 @@ public class CustomerService implements CustomerServiceInterface {
         }
 
     @Override
-    public Customer findCustomerByEmail(String email) {
+    public Optional<Customer> findCustomerByEmail(String email) {
 
-        return cr.findByEmail(email)
-                .orElseThrow(()->new NoSuchElementException("No user found"));
+       Optional<Customer> optionalCustomer=cr.findByEmail(email);
+       if (optionalCustomer.isEmpty()){
+           return null;
+       }
+
+       return optionalCustomer;
     }
 
     public UserLoginResponse login(String email, String password){

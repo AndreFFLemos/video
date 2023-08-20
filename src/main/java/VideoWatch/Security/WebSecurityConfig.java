@@ -68,11 +68,12 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+
                 .csrf((csrf) -> csrf
                         .ignoringRequestMatchers("/api/register")
-                        .ignoringRequestMatchers("api/customer/**")
-                        .ignoringRequestMatchers("api/email")
-                        .ignoringRequestMatchers("api/movie/**")
+                        .ignoringRequestMatchers("/api/customer/**")
+                        .ignoringRequestMatchers("/api/email")
+                        .ignoringRequestMatchers("/api/movie/**")
                 )
                 .authorizeRequests()
                 .requestMatchers("/api/register").permitAll()  // Public access

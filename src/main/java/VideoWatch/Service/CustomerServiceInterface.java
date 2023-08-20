@@ -7,6 +7,7 @@ import VideoWatch.Model.UserLoginResponse;
 import VideoWatch.Model.UserRegistrationRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CustomerServiceInterface {
 
@@ -17,7 +18,7 @@ public interface CustomerServiceInterface {
     List <CustomerDto> findAll();
     List <CustomerDto> findCustomerByFirstName(String name);
     List <CustomerDto> findCustomerByLastName(String l);
-    Customer findCustomerByEmail(String email);
+    Optional<Customer> findCustomerByEmail(String email);
     UserLoginResponse login(String email, String password);
     void updatePassword(Integer id, PasswordDto passwordDto);
 }
