@@ -58,6 +58,18 @@ public class CustomerService implements CustomerServiceInterface {
         if(userRegistration.getPassword() == null || userRegistration.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Password is missing or empty");
         }
+
+        if(userRegistration.getPasswordConfirm() == null || userRegistration.getPasswordConfirm().isEmpty()) {
+            throw new IllegalArgumentException("Password is missing or empty");
+        }
+
+        System.out.println(userRegistration.getPassword());
+        System.out.println(userRegistration.getPasswordConfirm());
+
+        if (!userRegistration.getPassword().equals(userRegistration.getPasswordConfirm())){
+            throw new IllegalArgumentException("Passwords not the same");
+        }
+
         //if the customer is in the DB then the method will throw the exception
         cr.findByEmail(userRegistration.getEmail())
                 .ifPresent(customer->{

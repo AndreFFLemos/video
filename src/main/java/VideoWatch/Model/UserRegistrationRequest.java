@@ -8,7 +8,24 @@ public class UserRegistrationRequest {
     private String email;
     @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters.")
     private String password;
+    private String passwordConfirm;
     private String firstName;
+
+    public String getPasswordConfirm() {
+        return passwordConfirm;
+    }
+
+    public void setPasswordConfirm(String passwordConfirm) {
+        this.passwordConfirm = passwordConfirm;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
 
     public String getEmail() {
         return email;
@@ -26,13 +43,6 @@ public class UserRegistrationRequest {
         this.password = password;
     }
 
-    public String getfirstName() {
-        return firstName;
-    }
-
-    public void setName(String firstName) {
-        this.firstName = firstName;
-    }
 
     @Override
     public boolean equals(Object o) {

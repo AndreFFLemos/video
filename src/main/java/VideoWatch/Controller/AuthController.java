@@ -4,6 +4,7 @@ import VideoWatch.Model.Email;
 import VideoWatch.Model.UserRegistrationRequest;
 import VideoWatch.Service.CustomerServiceInterface;
 import VideoWatch.Service.EmailServiceInterface;
+import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,13 +12,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
 
+import static org.hibernate.query.sqm.tree.SqmNode.log;
+
 @RestController
     @RequestMapping(value= "/api")
     @CrossOrigin(origins = "http://127.0.0.1:5500")
     public class AuthController {
 
-        private CustomerServiceInterface customerServiceInterface;
-        private EmailServiceInterface emailServiceInterface;
+    private CustomerServiceInterface customerServiceInterface;
+    private EmailServiceInterface emailServiceInterface;
 
     @Autowired
     public AuthController(CustomerServiceInterface customerServiceInterface, EmailServiceInterface emailServiceInterface) {
@@ -26,24 +29,27 @@ import java.util.Map;
     }
 
     @PostMapping(value = "/register")
-        public ResponseEntity<?> register(@RequestBody UserRegistrationRequest registrationRequest) {
-            // Check if user already exists
-            if(customerServiceInterface.findCustomerByEmail(registrationRequest.getEmail())==null) {
-                return ResponseEntity.noContent().build();
-            }
-
-            // Create a new user
-            customerServiceInterface.createCustomer(registrationRequest);
-            //when a user registers at the API it authomatically sends a welcoming email
-            emailServiceInterface.sendWelcomingEmail(registrationRequest);
-
-            //the Map.of creates an immutable collection and cannot be changed
-        Map<String, String> data = Map.of(
-                "status", "redirection_required",
-                "message", "Please continue to the URL.",
-                "redirect_url", "http://localhost:8080/api/login"
-        );
-
-        return ResponseEntity.ok(data);
+    public ResponseEntity<?> register(@RequestBody UserRegistrationRequest registrationRequest) {
+        // Check if user already exists
+        if (customerServiceInterface.findCustomerByEmail(registrationRequest.getEmail()) != null) {
+            return ResponseEntity.status(HttpStatus.SC_CONFLICT).body("Email já existe!");
         }
-    }
+            try {
+                // Create a new user
+                customerServiceInterface.createCustomer(registrationRequest);
+
+                //when a user registers at the API it authomatically sends a welcoming email
+                emailServiceInterface.sendWelcomingEmail(registrationRequest);
+
+                //the Map.of creates an immutable collection and cannot be changed
+                Map<String, String> data = Map.of(
+                        "status", "Registro bem sucedido");
+
+                return ResponseEntity.status(HttpStatus.SC_CREATED).body(data);
+            } catch (Exception e) {
+                // log the error and return a response
+                log.error("Error during registration", e);
+                return ResponseEntity.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).body("Registro falhado por erros internos");
+            }
+        }
+}
