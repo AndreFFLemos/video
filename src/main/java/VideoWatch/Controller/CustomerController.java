@@ -7,11 +7,13 @@ import VideoWatch.Model.UserLoginRequest;
 import VideoWatch.Model.UserLoginResponse;
 import VideoWatch.Service.CustomerServiceInterface;
 import VideoWatch.Service.EmailService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.Cookie;
 
 import java.util.List;
 
@@ -85,10 +87,27 @@ public class CustomerController implements CustomerControllerInterface {
 
         return new ResponseEntity<>(customerServiceInterface.findAll(), HttpStatus.OK);
     }
+
+    /*backend will store the authentication token in an HttpOnly cookie
+    instead of sending it in the response body. The frontend automatically
+   attachs the cookie to subsequent requests to the server,
+    which can then extract the token and verify it. The httpservlet is an API that sends
+    the responses and Spring injects it in the method to be manipulated and add the cookie
+     */
     @Override
     @PostMapping(value="/login")
-    public UserLoginResponse loginRequest(@RequestBody UserLoginRequest login) {
-        return customerServiceInterface.login(login.getEmail(), login.getPassword());
+    public UserLoginResponse loginRequest(@RequestBody UserLoginRequest login, HttpServletResponse response) {
+        UserLoginResponse userLoginResponse = customerServiceInterface.login(login.getEmail(), login.getPassword());
+
+        // Create HttpOnly Cookie with the token
+        Cookie authCookie = new Cookie("auth_token", userLoginResponse.getToken());
+        authCookie.setHttpOnly(true);
+        authCookie.setSecure(false);  // This should be set when using HTTPS
+        authCookie.setPath("/");     // Available to entire domain
+
+        response.addCookie(authCookie);
+
+        return new UserLoginResponse(userLoginResponse.getCustomerDto());
     }
 
     @PostMapping(value="/customer/email")

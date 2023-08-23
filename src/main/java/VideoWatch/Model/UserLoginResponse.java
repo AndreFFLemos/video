@@ -10,14 +10,14 @@ public class UserLoginResponse {
     public UserLoginResponse() {
     }
 
-    public UserLoginResponse(String token, CustomerDto customerDto) {
-        this.token = token;
+    public UserLoginResponse(CustomerDto customerDto) {
         this.customerDto = customerDto;
     }
 
     public String getToken() {
         return token;
     }
+
     public void setToken(String token) {
         this.token = token;
     }

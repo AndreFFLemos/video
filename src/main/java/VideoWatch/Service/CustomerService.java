@@ -60,12 +60,10 @@ public class CustomerService implements CustomerServiceInterface {
         }
 
         if(userRegistration.getPasswordConfirm() == null || userRegistration.getPasswordConfirm().isEmpty()) {
-            throw new IllegalArgumentException("Password is missing or empty");
+            throw new IllegalArgumentException("PasswordConfirmation is missing or empty");
         }
 
-        System.out.println(userRegistration.getPassword());
-        System.out.println(userRegistration.getPasswordConfirm());
-
+        //provide extra security in case someone overpasses the frontend validation
         if (!userRegistration.getPassword().equals(userRegistration.getPasswordConfirm())){
             throw new IllegalArgumentException("Passwords not the same");
         }
@@ -82,7 +80,8 @@ public class CustomerService implements CustomerServiceInterface {
         //passwordEncoder criptographs the password introduced by the customer
         String thePassword=passwordEncoder.encode(customer.getPassword());
         customer.setPassword(thePassword);
-        //tell the repository to persist the customer instance and save that instance on the customer variable
+        //tell the repository to persist, imediatelly before the transation is over,
+        // the customer instance and save that instance on the customer variable
         customer= cr.saveAndFlush(customer);
         //convert that persisted instance back in to a DTO object
         CustomerDto customerDto1= modelMapper.map(customer,CustomerDto.class);
@@ -192,7 +191,7 @@ public class CustomerService implements CustomerServiceInterface {
                 .map(customer->modelMapper.map(customer,CustomerDto.class))//if there is a customer inside the optional it will be mapped
                 .orElseThrow(()-> new NoSuchElementException("User not found")); //using a Supplier Interface
 
-        return new UserLoginResponse(token,customerDto);
+        return new UserLoginResponse(customerDto);
     }
 
 

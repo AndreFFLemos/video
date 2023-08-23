@@ -4,6 +4,7 @@ import VideoWatch.DTO.CustomerDto;
 import VideoWatch.DTO.PasswordDto;
 import VideoWatch.Model.UserLoginRequest;
 import VideoWatch.Model.UserLoginResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,5 +24,5 @@ public interface CustomerControllerInterface {
     ResponseEntity<Void> updateCustomer(@PathVariable int id,@Valid @RequestBody CustomerDto customerDto);
     ResponseEntity<Void> updatePassword(@PathVariable Integer id, @RequestBody PasswordDto passwordDto);
     ResponseEntity<Void> deleteCustomer(@PathVariable int id);
-    UserLoginResponse loginRequest(@RequestBody UserLoginRequest request);
+    UserLoginResponse loginRequest(@RequestBody UserLoginRequest request, HttpServletResponse response);
 }
