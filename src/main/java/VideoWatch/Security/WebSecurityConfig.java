@@ -18,6 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.Arrays;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 
 //this class provides the config for spring security
 @Configuration
@@ -74,14 +76,20 @@ public class WebSecurityConfig {
                         .ignoringRequestMatchers("/api/customer/**")
                         .ignoringRequestMatchers("/api/email")
                         .ignoringRequestMatchers("/api/movie/**")
+                        .ignoringRequestMatchers("/api/login")
                 )
                 .authorizeRequests()
+                .requestMatchers("/api/login").permitAll()
                 .requestMatchers("/api/register").permitAll()  // Public access
                 .requestMatchers("/api/customer/**").permitAll()  // Requires authentication
                 .anyRequest().permitAll()  // Any other request is public
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+                        UsernamePasswordAuthenticationFilter.class)
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
+                );
 
         return http.build();
     }

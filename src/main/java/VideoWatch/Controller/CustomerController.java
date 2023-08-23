@@ -95,6 +95,7 @@ public class CustomerController implements CustomerControllerInterface {
     the responses and Spring injects it in the method to be manipulated and add the cookie
      */
     @Override
+    @CrossOrigin(origins = "http://localhost:8080/api/login", allowCredentials = "true")
     @PostMapping(value="/login")
     public UserLoginResponse loginRequest(@RequestBody UserLoginRequest login, HttpServletResponse response) {
         UserLoginResponse userLoginResponse = customerServiceInterface.login(login.getEmail(), login.getPassword());
