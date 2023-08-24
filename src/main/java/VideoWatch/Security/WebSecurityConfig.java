@@ -6,15 +6,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 import java.util.Arrays;
 
@@ -70,19 +74,17 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-
-                .csrf((csrf) -> csrf
-                        .ignoringRequestMatchers("/api/register")
-                        .ignoringRequestMatchers("/api/customer/**")
-                        .ignoringRequestMatchers("/api/email")
-                        .ignoringRequestMatchers("/api/movie/**")
-                        .ignoringRequestMatchers("/api/login")
-                )
+                .csrf()
+                .disable()  // Disabling CSRF for stateless API
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Make the API stateless
+                .and()
                 .authorizeRequests()
+                //this will allow non-auth users to use the token in the header when they submit the login form
+                .requestMatchers("/api/csrf-token").permitAll()
                 .requestMatchers("/api/login").permitAll()
                 .requestMatchers("/api/register").permitAll()  // Public access
-                .requestMatchers("/api/customer/**").permitAll()  // Requires authentication
-                .anyRequest().permitAll()  // Any other request is public
+                .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+                .anyRequest().authenticated() // All other requests need authentication
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
@@ -90,8 +92,11 @@ public class WebSecurityConfig {
                         .loginPage("/login")
                         .permitAll()
                 );
-
         return http.build();
+    }
+
+    private CsrfTokenRepository csrfTokenRepository() {
+        return new CustomCsrfTokenRepository();
     }
 }
 

@@ -170,7 +170,7 @@ public class CustomerService implements CustomerServiceInterface {
 
        Optional<Customer> optionalCustomer=cr.findByEmail(email);
        if (optionalCustomer.isEmpty()){
-           return null;
+           return Optional.empty();
        }
 
        return optionalCustomer;

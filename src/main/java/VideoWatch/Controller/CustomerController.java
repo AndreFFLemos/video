@@ -7,11 +7,14 @@ import VideoWatch.Model.UserLoginRequest;
 import VideoWatch.Model.UserLoginResponse;
 import VideoWatch.Service.CustomerServiceInterface;
 import VideoWatch.Service.EmailService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
 
@@ -95,11 +98,11 @@ public class CustomerController implements CustomerControllerInterface {
     the responses and Spring injects it in the method to be manipulated and add the cookie
      */
     @Override
-    @CrossOrigin(origins = "http://localhost:8080/api/login", allowCredentials = "true")
+    @CrossOrigin(origins = "http://localhost:5500/api/login", allowCredentials = "true")
     @PostMapping(value="/login")
     public UserLoginResponse loginRequest(@RequestBody UserLoginRequest login, HttpServletResponse response) {
         UserLoginResponse userLoginResponse = customerServiceInterface.login(login.getEmail(), login.getPassword());
-
+/*
         // Create HttpOnly Cookie with the token
         Cookie authCookie = new Cookie("auth_token", userLoginResponse.getToken());
         authCookie.setHttpOnly(true);
@@ -107,9 +110,27 @@ public class CustomerController implements CustomerControllerInterface {
         authCookie.setPath("/");     // Available to entire domain
 
         response.addCookie(authCookie);
-
+*/
         return new UserLoginResponse(userLoginResponse.getCustomerDto());
     }
+
+    /* this is the endpoint where the browser can retrieve the csrf token it's not needed anymore because
+    in a stateless design using JWT, the client will send the JWT token with every request,
+    which reduces CSRF attacks because the token is not automatically sent by browsers.
+    @GetMapping("/csrf-token")
+    public ResponseEntity<String> getCSRFToken(HttpServletRequest request) {
+        System.out.println("Received request with method: " + request.getMethod());
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-CSRF-TOKEN", csrfToken.getToken());
+            return new ResponseEntity<>("", headers, HttpStatus.OK);
+        } else {
+            System.out.println("csrfToken is null!");
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("CSRF token not found.");
+    }*/
+
 
     @PostMapping(value="/customer/email")
     public String sendEmail(@RequestBody Email email){

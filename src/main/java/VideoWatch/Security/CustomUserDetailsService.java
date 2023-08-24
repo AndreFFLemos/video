@@ -28,8 +28,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email){
         Optional<Customer> customer= customerService.findCustomerByEmail(email);
 
-        if (customer.isEmpty()){
-            return null;
+        if (customer.isEmpty()) {
+            throw new UsernameNotFoundException("Customer with email " + email + " was not found.");
         }
 
         return customer.get();
