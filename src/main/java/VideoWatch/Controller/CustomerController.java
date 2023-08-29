@@ -2,23 +2,29 @@ package VideoWatch.Controller;
 
 import VideoWatch.DTO.CustomerDto;
 import VideoWatch.DTO.PasswordDto;
+import VideoWatch.Model.BlackListedTokens;
 import VideoWatch.Model.Email;
 import VideoWatch.Model.UserLoginRequest;
 import VideoWatch.Model.UserLoginResponse;
+import VideoWatch.Service.BlackListedTokenService;
+import VideoWatch.Service.BlackListedTokenServiceInterface;
 import VideoWatch.Service.CustomerServiceInterface;
 import VideoWatch.Service.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping(value = "/api")
@@ -26,6 +32,10 @@ public class CustomerController implements CustomerControllerInterface {
 
     private CustomerServiceInterface customerServiceInterface;
     private EmailService emailService;
+    private BlackListedTokenServiceInterface blackListedTokenServiceInterface;
+    @Value("${security.headerPrefix}")
+    private String headerPrefix;
+
 
     @Autowired
     public CustomerController(CustomerServiceInterface customerServiceInterface, EmailService emailService) {
@@ -130,6 +140,19 @@ public class CustomerController implements CustomerControllerInterface {
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("CSRF token not found.");
     }*/
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").replace(headerPrefix, "");
+
+        // Add token to the blacklist when token is terminated before the expiracy date
+        blackListedTokenServiceInterface.addTokenToBlacklist(token);
+
+        // Clear the current authentication
+        SecurityContextHolder.getContext().setAuthentication(null);
+
+        return ResponseEntity.ok("Logged out successfully");
+    }
 
 
     @PostMapping(value="/customer/email")

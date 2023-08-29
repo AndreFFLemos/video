@@ -9,6 +9,7 @@ import VideoWatch.Model.Customer;
 import VideoWatch.Security.JWTService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,7 +28,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class CustomerService implements CustomerServiceInterface {
 
-    private static final String headerPrefix= "Bearer";
+    @Value("${security.headerPrefix}")
+    private String headerPrefix;
     private final CustomerRepository cr;
     private UserRegistrationRequest userRegistration;
     private final ModelMapper modelMapper;
