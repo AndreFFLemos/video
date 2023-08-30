@@ -17,6 +17,8 @@ import java.util.*;
 @Entity
 public class Customer implements UserDetails {
 
+    //Remember!!! Next project to try UUID to generate id
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;

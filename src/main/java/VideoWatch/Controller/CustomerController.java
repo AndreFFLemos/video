@@ -2,28 +2,31 @@ package VideoWatch.Controller;
 
 import VideoWatch.DTO.CustomerDto;
 import VideoWatch.DTO.PasswordDto;
-import VideoWatch.Model.BlackListedTokens;
-import VideoWatch.Model.Email;
-import VideoWatch.Model.UserLoginRequest;
-import VideoWatch.Model.UserLoginResponse;
+import VideoWatch.Model.*;
+import VideoWatch.Security.JWTService;
 import VideoWatch.Service.BlackListedTokenService;
 import VideoWatch.Service.BlackListedTokenServiceInterface;
 import VideoWatch.Service.CustomerServiceInterface;
 import VideoWatch.Service.EmailService;
+import ch.qos.logback.classic.Logger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.server.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.Cookie;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 @RestController
@@ -33,14 +36,19 @@ public class CustomerController implements CustomerControllerInterface {
     private CustomerServiceInterface customerServiceInterface;
     private EmailService emailService;
     private BlackListedTokenServiceInterface blackListedTokenServiceInterface;
+    private JWTService jwtService;
+    private ModelMapper modelMapper;
     @Value("${security.headerPrefix}")
     private String headerPrefix;
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(CustomerController.class);
 
 
     @Autowired
-    public CustomerController(CustomerServiceInterface customerServiceInterface, EmailService emailService) {
+    public CustomerController(CustomerServiceInterface customerServiceInterface, EmailService emailService, JWTService jwtService, ModelMapper modelMapper) {
         this.customerServiceInterface = customerServiceInterface;
         this.emailService = emailService;
+        this.jwtService = jwtService;
+        this.modelMapper = modelMapper;
     }
 
     @Override
@@ -101,28 +109,6 @@ public class CustomerController implements CustomerControllerInterface {
         return new ResponseEntity<>(customerServiceInterface.findAll(), HttpStatus.OK);
     }
 
-    /*backend will store the authentication token in an HttpOnly cookie
-    instead of sending it in the response body. The frontend automatically
-   attachs the cookie to subsequent requests to the server,
-    which can then extract the token and verify it. The httpservlet is an API that sends
-    the responses and Spring injects it in the method to be manipulated and add the cookie
-     */
-    @Override
-    @CrossOrigin(origins = "http://localhost:5500/api/login", allowCredentials = "true")
-    @PostMapping(value="/login")
-    public UserLoginResponse loginRequest(@RequestBody UserLoginRequest login, HttpServletResponse response) {
-        UserLoginResponse userLoginResponse = customerServiceInterface.login(login.getEmail(), login.getPassword());
-/*
-        // Create HttpOnly Cookie with the token
-        Cookie authCookie = new Cookie("auth_token", userLoginResponse.getToken());
-        authCookie.setHttpOnly(true);
-        authCookie.setSecure(false);  // This should be set when using HTTPS
-        authCookie.setPath("/");     // Available to entire domain
-
-        response.addCookie(authCookie);
-*/
-        return new UserLoginResponse(userLoginResponse.getCustomerDto());
-    }
 
     /* this is the endpoint where the browser can retrieve the csrf token it's not needed anymore because
     in a stateless design using JWT, the client will send the JWT token with every request,
@@ -143,17 +129,15 @@ public class CustomerController implements CustomerControllerInterface {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").replace(headerPrefix, "");
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
 
-        // Add token to the blacklist when token is terminated before the expiracy date
-        blackListedTokenServiceInterface.addTokenToBlacklist(token);
+        logger.info("User logged out." + token);
 
         // Clear the current authentication
         SecurityContextHolder.getContext().setAuthentication(null);
 
         return ResponseEntity.ok("Logged out successfully");
     }
-
 
     @PostMapping(value="/customer/email")
     public String sendEmail(@RequestBody Email email){

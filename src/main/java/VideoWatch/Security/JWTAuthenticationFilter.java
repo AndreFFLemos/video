@@ -1,10 +1,15 @@
 package VideoWatch.Security;
 
+import jakarta.persistence.Access;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,17 +17,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
+import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 
 //before the request enters our backend point on the controller, it will hit this class
 //responsible for the authentication of the users in every request
-public class JWTAuthenticationFilter extends OncePerRequestFilter {
+public class JWTAuthenticationFilter extends GenericFilterBean {
 
     @Value("${jwt.secretKey}")
     private String secretKey;
@@ -32,68 +40,66 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     //used to load the user details
     private CustomUserDetailsService customUserDetailsService;
 
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList("/api/register", "/api/public");  // Add other public endpoints as needed
+
+    @Autowired
     public JWTAuthenticationFilter(JWTService jwtService, CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
     }
 
-    @Override //from onceperrequestfilter
-    //the method checks the token in the request, verifies the user and sets up the security context
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    private Optional<String> getToken(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
 
+        if (StringUtils.hasText(token) && token.startsWith(BEARER_PREFIX)) {
+            return Optional.of(token.substring(BEARER_PREFIX.length()));
+        }
 
-        if (request.getRequestURI().equals("/api/register")){
-            filterChain.doFilter(request,response);
+        return Optional.empty();
+    }
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+        String requestURI = request.getRequestURI();
+
+        if (PUBLIC_ENDPOINTS.contains(requestURI)) {
+            filterChain.doFilter(servletRequest, servletResponse);
             return;
         }
 
-        String token = getToken(request);
+        Optional<String> optionalToken = getToken(request);
 
-        if (token==null|| !jwtService.isValid(token)){
-            filterChain.doFilter(request,response);
+        if (!optionalToken.isPresent() || !jwtService.isValid(optionalToken.get())) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid or missing token");
             return;
         }
 
-
-        //from the token, let's get the identification
+        String token = optionalToken.get();
         Optional<String> userEmail = jwtService.getUserId(token);
 
         if (userEmail.isPresent()) {
-
-            //with the email get the user from the DB
             UserDetails customer = customUserDetailsService.loadUserByUsername(userEmail.get());
-            // Get the roles from the JWT token
             List<String> roles = jwtService.getRolesFromToken(token);
 
-            // Convert the roles to GrantedAuthority objects
             List<GrantedAuthority> authorities = roles.stream()
                     .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                     .collect(Collectors.toList());
 
-            //the empty collections parameter are the permissions that the user has, and if the user is authenticated
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(customer, null, authorities);
 
-            //sets the authentication context to the actual request in course
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            //now spring security identify the user
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-        filterChain.doFilter(request, response);
-    }
 
-    //this method extracts the token from the authorization header of the request
-    private String getToken(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-
-        //Spring class with a method to check if the token came with more than white spaces or not
-        //the token returns a String but the first 6 letters are Bearer, I want it to return what's next
-        if (StringUtils.hasText(token) && token.startsWith("Bearer ")) {
-            return token.substring(7);
-        }
-
-        return null;
+        filterChain.doFilter(servletRequest, servletResponse);
     }
 }

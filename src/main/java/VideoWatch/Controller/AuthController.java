@@ -30,10 +30,7 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;
 
     @PostMapping(value = "/register")
     public ResponseEntity<?> register(@RequestBody UserRegistrationRequest registrationRequest) {
-        // Check if user already exists
-        if (customerServiceInterface.findCustomerByEmail(registrationRequest.getEmail()) != null) {
-            return ResponseEntity.status(HttpStatus.SC_CONFLICT).body("Email já existe!");
-        }
+
             try {
                 // Create a new user
                 customerServiceInterface.createCustomer(registrationRequest);
@@ -43,7 +40,7 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;
 
                 //the Map.of creates an immutable collection and cannot be changed
                 Map<String, String> data = Map.of(
-                        "status", "Registro bem sucedido");
+                        "status", "Registration succeeded");
 
                 return ResponseEntity.status(HttpStatus.SC_CREATED).body(data);
             } catch (Exception e) {

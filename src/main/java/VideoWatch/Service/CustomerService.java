@@ -50,7 +50,6 @@ public class CustomerService implements CustomerServiceInterface {
         this.authenticationManager = authenticationManager;
     }
 
-    @Transactional(propagation=Propagation.REQUIRES_NEW)
     @Override
     public CustomerDto createCustomer(UserRegistrationRequest userRegistration) {
         if (userRegistration == null) {
