@@ -13,6 +13,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,12 +33,13 @@ import static org.springframework.security.config.Customizer.withDefaults;
 //this class provides the config for spring security
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig{
+public class WebSecurityConfig  {
     @Value("${jwt.secretKey}")
     private String secretKey;
     private final JWTService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
 
+    @Autowired
     public WebSecurityConfig(@Lazy JWTService jwtService, CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
@@ -44,7 +47,7 @@ public class WebSecurityConfig{
 
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
-        return new ProviderManager(Arrays.asList(authenticationProvider()));
+        return new ProviderManager(Arrays.asList(authenticationProvider( customUserDetailsService, passwordEncoder())));
     }
 
     @Bean
@@ -53,11 +56,19 @@ public class WebSecurityConfig{
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    public DaoAuthenticationProvider authenticationProvider(CustomUserDetailsService customUserDetailsService, PasswordEncoder passwordEncoder) {
+        CustomDaoAuthenticationProvider authProvider = new CustomDaoAuthenticationProvider(customUserDetailsService,passwordEncoder);
+
         authProvider.setUserDetailsService(customUserDetailsService);
+        System.out.println(authProvider);
+
         authProvider.setPasswordEncoder(passwordEncoder());
+
         return authProvider;
+    }
+
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authenticationProvider( customUserDetailsService, passwordEncoder()));
     }
 
 
@@ -98,7 +109,7 @@ public class WebSecurityConfig{
     }
 
     private void addFilters(HttpSecurity http) throws Exception {
-        http.addFilterBefore(requestLoggingFilter(), UsernamePasswordAuthenticationFilter.class)
+        http    .addFilterBefore(requestLoggingFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authenticationLoggingFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

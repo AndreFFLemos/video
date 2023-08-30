@@ -1,8 +1,10 @@
 package VideoWatch.Security;
 
+import VideoWatch.Model.UserLoginRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +13,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -41,19 +45,31 @@ public class UsernameAuthenticationFilter extends UsernamePasswordAuthentication
     }
 
     @Override
-    protected String obtainUsername(HttpServletRequest request) {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
-            InputStream inputStream = request.getInputStream();
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> body = objectMapper.readValue(inputStream, new TypeReference<Map<String, String>>() {});
-
-            String email = body.get("email");
-            System.out.println("Extracted Email: " + email);
-            return email;
+            UserLoginRequest userLoginRequest = new ObjectMapper().readValue(request.getInputStream(), UserLoginRequest.class);
+            request.setAttribute("userLoginRequest", userLoginRequest);
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
+
+        return super.attemptAuthentication(request, response);
     }
 
+    @Override
+    protected String obtainUsername(HttpServletRequest request) {
+        UserLoginRequest userLoginRequest = (UserLoginRequest) request.getAttribute("userLoginRequest");
+        String email = userLoginRequest.getEmail();
+        System.out.println("Extracted Email: " + email);
+        return email;
+    }
+
+    @Override
+    protected String obtainPassword(HttpServletRequest request) {
+        UserLoginRequest userLoginRequest = (UserLoginRequest) request.getAttribute("userLoginRequest");
+        String password = userLoginRequest.getPassword();
+        System.out.println("Extracted Password: " + password);
+        return password;
+    }
 }
+
