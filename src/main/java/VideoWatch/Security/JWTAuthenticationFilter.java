@@ -42,7 +42,7 @@ public class JWTAuthenticationFilter extends GenericFilterBean {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList("/api/register", "/api/public");  // Add other public endpoints as needed
+    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList("/api/register", "/api/login");
 
     @Autowired
     public JWTAuthenticationFilter(JWTService jwtService, CustomUserDetailsService customUserDetailsService) {

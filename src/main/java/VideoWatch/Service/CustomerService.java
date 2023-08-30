@@ -31,23 +31,14 @@ public class CustomerService implements CustomerServiceInterface {
     @Value("${security.headerPrefix}")
     private String headerPrefix;
     private final CustomerRepository cr;
-    private UserRegistrationRequest userRegistration;
     private final ModelMapper modelMapper;
     private PasswordEncoder passwordEncoder;
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JWTService jwtService;
 
     @Autowired
     public CustomerService(CustomerRepository cr, ModelMapper modelMapper, PasswordEncoder passwordEncoder) {
         this.cr = cr;
         this.modelMapper = modelMapper;
-        this.passwordEncoder=passwordEncoder;
-    }
-
-    @Autowired
-    public void setAuthenticationManager(@Lazy AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -89,7 +80,7 @@ public class CustomerService implements CustomerServiceInterface {
 
         return  customerDto1;
     }
-@Override
+    @Override
     public void deleteCustomer(int id) {
 
         cr.findById(id).orElseThrow(()-> new NoSuchElementException("No customer found"));
@@ -102,7 +93,7 @@ public class CustomerService implements CustomerServiceInterface {
                 .map(customer->modelMapper.map(customer, CustomerDto.class))
                 .orElse(null);
     }
-@Override
+    @Override
     public void updateCustomer(int id, CustomerDto customerDto) {
         Optional<Customer> existingOptCustomer= cr.findById(id);
         if (existingOptCustomer!=null) {
@@ -176,24 +167,5 @@ public class CustomerService implements CustomerServiceInterface {
 
        return optionalCustomer;
     }
-
-    public UserLoginResponse login(String email, String password){
-
-        //the authentication manager gets the login values and if they match an existent user it checks its authentication
-        Authentication authentication= authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email,password,Collections.emptyList()));
-
-        //and now Spring knows there is an authenticated user
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        String token= headerPrefix+jwtService.generateToken(authentication);
-
-        CustomerDto customerDto= cr.findByEmail(email)//returns an optional
-                .map(customer->modelMapper.map(customer,CustomerDto.class))//if there is a customer inside the optional it will be mapped
-                .orElseThrow(()-> new NoSuchElementException("User not found")); //using a Supplier Interface
-
-        return new UserLoginResponse(customerDto);
-    }
-
 
 }

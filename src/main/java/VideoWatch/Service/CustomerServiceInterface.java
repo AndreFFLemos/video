@@ -19,6 +19,5 @@ public interface CustomerServiceInterface {
     List <CustomerDto> findCustomerByFirstName(String name);
     List <CustomerDto> findCustomerByLastName(String l);
     Optional<Customer> findCustomerByEmail(String email);
-    UserLoginResponse login(String email, String password);
     void updatePassword(Integer id, PasswordDto passwordDto);
 }

@@ -4,6 +4,7 @@ import VideoWatch.Model.Customer;
 import VideoWatch.Service.CustomerService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,16 +15,11 @@ import java.util.Optional;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private ModelMapper modelMapper;
     private CustomerService customerService;
 
-    @Autowired
-    public CustomUserDetailsService(ModelMapper modelMapper, CustomerService customerService) {
-        this.modelMapper = modelMapper;
+     @Autowired
+    public CustomUserDetailsService(@Lazy CustomerService customerService) {
         this.customerService = customerService;
-    }
-    public CustomUserDetailsService(){
-
     }
 
     @Override // from the userdetailsservice
