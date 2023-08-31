@@ -44,6 +44,11 @@ public class UsernameAuthenticationFilter extends UsernamePasswordAuthentication
         });
     }
 
+    /*Before any of the other methods get a chance to run, it reads the InputStream,
+    deserializes it into a UserLoginRequest, and then sets it as a request attribute.
+     The obtainUsername and obtainPassword methods then simply pull from this attribute
+      instead of attempting to re-read the request's InputStream.
+     */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {

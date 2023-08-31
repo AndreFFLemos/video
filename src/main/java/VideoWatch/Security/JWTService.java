@@ -3,6 +3,8 @@ package VideoWatch.Security;
 import VideoWatch.Model.Customer;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -20,10 +22,21 @@ public class JWTService {
     @Value("${jwt.secretKey}")
     private String secretKey;
 
-    // The expiration time of the token in seconds (1 hour)
-    private static final long tokenDuration = Duration.ofHours(5).getSeconds();
+    private static final Logger logger = LoggerFactory.getLogger(JWTService.class);
+
+    // The expiration time of the token in seconds (20min)
+    private static final long tokenDuration = Duration.ofMinutes(20).getSeconds();
 
     public String generateToken(Authentication authentication) {
+
+        // Add debug logging to check if the method gets called and see the content of the authentication object.
+        logger.debug("generateToken called with authentication: {}", authentication);
+
+        // Further details can be logged to see the principal details if the authentication is not null.
+        if (authentication != null && authentication.getPrincipal() != null) {
+            logger.debug("Authentication principal: {}", authentication.getPrincipal());
+        }
+
         // the getPrincipal method returns the Object of the authentication
         // that is then converted to the POJO.
         // In this app the POJO is the Customer
@@ -32,13 +45,22 @@ public class JWTService {
         Instant now = Instant.now();
         Instant expirationTime = now.plusSeconds(tokenDuration);
 
-        return Jwts.builder()
-                .setSubject(customer.getEmail()) //specifies what should be used to identify the customer
-                .setIssuedAt(Date.from(now)) //when the token was issued
-                .setExpiration(Date.from(expirationTime))//will end at a specified time
-                .signWith(SignatureAlgorithm.HS512, secretKey)// the algorithm used to create the token and the key used that only the server knows
-                .compact(); //compact the token and returns it as a String representation
+        String token = null;
+        try {
+            token = Jwts.builder()
+                    .setSubject(customer.getEmail()) //specifies what should be used to identify the customer
+                    .setIssuedAt(Date.from(now)) //when the token was issued
+                    .setExpiration(Date.from(expirationTime))//will end at a specified time
+                    .signWith(SignatureAlgorithm.HS512, secretKey)// the algorithm used to create the token and the key used that only the server knows
+                    .compact();
+            logger.info("JWT Token Generated: " + token); // Logging the generated token
+        } catch (Exception e) {
+            logger.error("Error during JWT token generation", e); // Logging any exception during token generation
+        }
+        return token;
     }
+
+
     public List<String> getRolesFromToken(String token) {
         Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
         return claims.get("roles", List.class);
