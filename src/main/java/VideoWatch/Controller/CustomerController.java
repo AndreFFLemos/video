@@ -109,24 +109,6 @@ public class CustomerController implements CustomerControllerInterface {
         return new ResponseEntity<>(customerServiceInterface.findAll(), HttpStatus.OK);
     }
 
-
-    /* this is the endpoint where the browser can retrieve the csrf token it's not needed anymore because
-    in a stateless design using JWT, the client will send the JWT token with every request,
-    which reduces CSRF attacks because the token is not automatically sent by browsers.
-    @GetMapping("/csrf-token")
-    public ResponseEntity<String> getCSRFToken(HttpServletRequest request) {
-        System.out.println("Received request with method: " + request.getMethod());
-        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-        if (csrfToken != null) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("X-CSRF-TOKEN", csrfToken.getToken());
-            return new ResponseEntity<>("", headers, HttpStatus.OK);
-        } else {
-            System.out.println("csrfToken is null!");
-        }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("CSRF token not found.");
-    }*/
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         String token = request.getHeader("Authorization").replace("Bearer ", "");

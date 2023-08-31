@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -15,7 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Service
 public class JWTService {
 
     // Read the private key from a secure configuration or environment variable
@@ -30,11 +31,11 @@ public class JWTService {
     public String generateToken(Authentication authentication) {
 
         // Add debug logging to check if the method gets called and see the content of the authentication object.
-        logger.debug("generateToken called with authentication: {}", authentication);
+        System.out.println("generateToken called with authentication: {}" + authentication);
 
         // Further details can be logged to see the principal details if the authentication is not null.
         if (authentication != null && authentication.getPrincipal() != null) {
-            logger.debug("Authentication principal: {}", authentication.getPrincipal());
+            System.out.println("Authentication principal: {}" + authentication.getPrincipal());
         }
 
         // the getPrincipal method returns the Object of the authentication
@@ -53,9 +54,9 @@ public class JWTService {
                     .setExpiration(Date.from(expirationTime))//will end at a specified time
                     .signWith(SignatureAlgorithm.HS512, secretKey)// the algorithm used to create the token and the key used that only the server knows
                     .compact();
-            logger.info("JWT Token Generated: " + token); // Logging the generated token
+            System.out.println("JWT Token Generated: " + token); // Logging the generated token
         } catch (Exception e) {
-            logger.error("Error during JWT token generation", e); // Logging any exception during token generation
+            System.out.println("Error during JWT token generation" + e); // Logging any exception during token generation
         }
         return token;
     }

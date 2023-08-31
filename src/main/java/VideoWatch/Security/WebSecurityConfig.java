@@ -14,7 +14,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,12 +21,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRepository;
-
 import java.util.Arrays;
 
-import static org.springframework.security.config.Customizer.withDefaults;
 
 
 //this class provides the config for spring security
@@ -135,8 +130,8 @@ public class WebSecurityConfig  {
 
     @Bean
     @Order(4)
-    public UsernamePasswordAuthenticationFilter authenticationFilter() throws Exception {
-        return new UsernameAuthenticationFilter(authenticationManagerBean());
+    public UsernameAuthenticationFilter authenticationFilter() throws Exception {
+        return new UsernameAuthenticationFilter(authenticationManagerBean(),jwtService);
     }
 
 }

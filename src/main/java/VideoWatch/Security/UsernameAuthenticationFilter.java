@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,27 +22,36 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Map;
+
 
 public class UsernameAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private JWTService jwtService;
 
-    public UsernameAuthenticationFilter(AuthenticationManager authenticationManager) {
+    private final JWTService jwtService;
+    private static final Logger logger = LoggerFactory.getLogger(JWTService.class);
+
+    @Autowired
+    public UsernameAuthenticationFilter(AuthenticationManager authenticationManager, JWTService jwtService) {
         super.setAuthenticationManager(authenticationManager);
+        this.jwtService = jwtService;
         setUsernameParameter("email");
         setFilterProcessesUrl("/api/login");
-    }
 
-
-    public void setJwtService(JWTService jwtService) {
-        this.jwtService = jwtService;
         setAuthenticationSuccessHandler((request, response, authentication) -> {
-            String jwtToken = jwtService.generateToken(authentication);
-            response.getWriter().write(jwtToken);
-            response.getWriter().flush();
+            try {
+                String jwtToken = jwtService.generateToken(authentication);
+
+                // Logging the successful authentication
+                System.out.println("User " + authentication.getName() + " was successfully authenticated.");
+
+                // Logging the token generation
+                System.out.println("Generated JWT Token: " + jwtToken);
+
+                response.getWriter().write(jwtToken);
+                response.getWriter().flush();
+            } catch(Exception e) {
+                e.printStackTrace();  // or log using a logger
+            }
         });
     }
 
@@ -52,6 +63,7 @@ public class UsernameAuthenticationFilter extends UsernamePasswordAuthentication
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
+            System.out.println("Login attempt detected. Processing authentication for /api/login endpoint.");
             UserLoginRequest userLoginRequest = new ObjectMapper().readValue(request.getInputStream(), UserLoginRequest.class);
             request.setAttribute("userLoginRequest", userLoginRequest);
         } catch (IOException e) {
@@ -61,11 +73,13 @@ public class UsernameAuthenticationFilter extends UsernamePasswordAuthentication
         return super.attemptAuthentication(request, response);
     }
 
+
+
     @Override
     protected String obtainUsername(HttpServletRequest request) {
         UserLoginRequest userLoginRequest = (UserLoginRequest) request.getAttribute("userLoginRequest");
         String email = userLoginRequest.getEmail();
-        System.out.println("Extracted Email: " + email);
+        logger.info("Extracted Email: " + email);
         return email;
     }
 
@@ -73,7 +87,7 @@ public class UsernameAuthenticationFilter extends UsernamePasswordAuthentication
     protected String obtainPassword(HttpServletRequest request) {
         UserLoginRequest userLoginRequest = (UserLoginRequest) request.getAttribute("userLoginRequest");
         String password = userLoginRequest.getPassword();
-        System.out.println("Extracted Password: " + password);
+        logger.info("Extracted Password: " + password);
         return password;
     }
 }
