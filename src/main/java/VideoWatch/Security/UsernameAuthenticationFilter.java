@@ -47,7 +47,10 @@ public class UsernameAuthenticationFilter extends UsernamePasswordAuthentication
                 // Logging the token generation
                 System.out.println("Generated JWT Token: " + jwtToken);
 
-                response.getWriter().write(jwtToken);
+                // Construct JSON response with token because frontend is expecting token in json
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("{\"token\":\"" + jwtToken + "\"}");
                 response.getWriter().flush();
             } catch(Exception e) {
                 e.printStackTrace();  // or log using a logger
